@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*; // import annotations สำ�
 
 import java.net.URI; // ใช้สร้าง URI สำหรับ Location header ใน POST response
 import java.util.List; // ใช้สำหรับ return list ของ Note
+import java.util.Map; // ใช้สำหรับ return map ของ String, Object
 
 @RestController // บอก Spring ว่าคลาสนี้เป็น REST Controller (return JSON)
 @RequestMapping("/api/notes") // กำหนด base path ของทุก endpoint ในคลาสนี้
@@ -42,6 +43,26 @@ public class NoteController {
                                      @RequestBody Note req) { // รับ Note object จาก request body (JSON)
     return ResponseEntity.ok(noteService.update(id, req)); // ส่ง HTTP 200 OK พร้อม Note ที่อัปเดตแล้ว
   }
+
+  @PatchMapping("/{id}")
+public ResponseEntity<Note> partialUpdate(@PathVariable Long id,
+                                          @RequestBody Map<String, Object> updates) {
+    Note existing = noteService.getById(id);
+    
+    // อัปเดตเฉพาะ field ที่ส่งมา
+    if (updates.containsKey("title")) {
+        existing.setTitle((String) updates.get("title"));
+    }
+    if (updates.containsKey("content")) {
+        existing.setContent((String) updates.get("content"));
+    }
+    if (updates.containsKey("imageUrl")) {
+        existing.setImageUrl((String) updates.get("imageUrl"));
+    }
+    
+    Note saved = noteService.update(id, existing);
+    return ResponseEntity.ok(saved);
+}
 
   // DELETE /api/notes/{id} → 204
   @DeleteMapping("/{id}") // รับ HTTP DELETE request ที่ /api/notes/{id}
