@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor; // Lombok annotation สร้าง cons
 import org.springframework.http.HttpStatus; // ใช้สำหรับ HTTP status codes (เช่น 404 NOT_FOUND)
 import org.springframework.stereotype.Service; // บอก Spring ว่าคลาสนี้เป็น Service component
 import org.springframework.web.server.ResponseStatusException; // ใช้ throw exception พร้อม HTTP status code
+import com.techup.spring.demo.dto.NoteRequest;
 
 import java.util.List; // ใช้สำหรับ return list ของ Note
 
@@ -28,21 +29,24 @@ public class NoteService {
   }
 
   /** CREATE: สร้าง Note ใหม่ */
-  public Note create(Note req) { // method สำหรับสร้าง Note ใหม่
-    Note saved = noteRepository.save(req); // เรียก repository method เพื่อบันทึก Note ลง database
+  public Note create(NoteRequest req) { // เปลี่ยน parameter เป็น NoteRequest
+    Note toSave = new Note(); // สร้าง Note object ใหม่
+    toSave.setTitle(req.getTitle()); // ตั้งค่า title จาก request
+    toSave.setContent(req.getContent()); // ตั้งค่า content จาก request
+    Note saved = noteRepository.save(toSave); // เรียก repository method เพื่อบันทึก Note ลง database
     return saved; // return Note ที่บันทึกแล้ว (มี id ที่ database สร้างให้)
   }
 
   /** UPDATE: แก้ไข Note ตาม id */
-  public Note update(Long id, Note req) { // method สำหรับแก้ไข Note ตาม id
+  public Note update(Long id, NoteRequest req) { // เปลี่ยน parameter เป็น NoteRequest
     Note existing = noteRepository.findById(id) // เรียก repository method เพื่อค้นหา Note ที่มีอยู่
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found")); // ถ้าไม่พบ ให้ throw exception พร้อม HTTP 404
 
     existing.setTitle(req.getTitle()); // อัปเดต title จาก request
     existing.setContent(req.getContent()); // อัปเดต content จาก request
-    if (req.getImageUrl() != null) { // ตรวจสอบว่า request มี imageUrl หรือไม่
-      existing.setImageUrl(req.getImageUrl()); // ถ้ามี ให้อัปเดต imageUrl
-    }
+    // if (req.getImageUrl() != null) { // ตรวจสอบว่า request มี imageUrl หรือไม่
+    //   existing.setImageUrl(req.getImageUrl()); // ถ้ามี ให้อัปเดต imageUrl
+    // }
 
     Note saved = noteRepository.save(existing); // เรียก repository method เพื่อบันทึกการเปลี่ยนแปลงลง database
     return saved; // return Note ที่อัปเดตแล้ว

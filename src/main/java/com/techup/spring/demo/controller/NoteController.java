@@ -5,6 +5,8 @@ import com.techup.spring.demo.service.NoteService; // import NoteService เพ�
 import lombok.RequiredArgsConstructor; // Lombok annotation สร้าง constructor ที่รับ final fields
 import org.springframework.http.ResponseEntity; // ใช้สำหรับสร้าง HTTP response พร้อม status code
 import org.springframework.web.bind.annotation.*; // import annotations สำหรับ REST API (@GetMapping, @PostMapping, etc.)
+import com.techup.spring.demo.dto.NoteRequest;
+import jakarta.validation.Valid;
 
 import java.net.URI; // ใช้สร้าง URI สำหรับ Location header ใน POST response
 import java.util.List; // ใช้สำหรับ return list ของ Note
@@ -31,7 +33,7 @@ public class NoteController {
 
   // POST /api/notes → 201 + Location header
   @PostMapping // รับ HTTP POST request ที่ /api/notes
-  public ResponseEntity<Note> create(@RequestBody Note req) { // รับ Note object จาก request body (JSON)
+  public ResponseEntity<Note> create(@Valid @RequestBody NoteRequest req) { // เพิ่ม @Valid และเปลี่ยนเป็น NoteRequest
     Note created = noteService.create(req); // เรียก service เพื่อสร้าง Note ใหม่ใน database
     URI location = URI.create("/api/notes/" + created.getId()); // สร้าง URI สำหรับ Location header
     return ResponseEntity.created(location).body(created); // ส่ง HTTP 201 Created พร้อม Location header และ Note ที่สร้าง
@@ -40,7 +42,7 @@ public class NoteController {
   // PUT /api/notes/{id} → 200 | 404
   @PutMapping("/{id}") // รับ HTTP PUT request ที่ /api/notes/{id}
   public ResponseEntity<Note> update(@PathVariable Long id, // ดึง id จาก URL path
-                                     @RequestBody Note req) { // รับ Note object จาก request body (JSON)
+                                     @Valid @RequestBody NoteRequest req) { // เพิ่ม @Valid และเปลี่ยนเป็น NoteRequest
     return ResponseEntity.ok(noteService.update(id, req)); // ส่ง HTTP 200 OK พร้อม Note ที่อัปเดตแล้ว
   }
 
@@ -60,7 +62,12 @@ public ResponseEntity<Note> partialUpdate(@PathVariable Long id,
         existing.setImageUrl((String) updates.get("imageUrl"));
     }
     
-    Note saved = noteService.update(id, existing);
+    // สร้าง NoteRequest จาก existing
+    NoteRequest req = new NoteRequest();
+    req.setTitle(existing.getTitle());
+    req.setContent(existing.getContent());
+    
+    Note saved = noteService.update(id, req); // ใช้ update() method
     return ResponseEntity.ok(saved);
 }
 
